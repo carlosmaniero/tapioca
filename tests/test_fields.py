@@ -112,3 +112,27 @@ def test_floatfield():
 
 def test_floatfield_limits():
     num_limits(fields.FloatField, 3.14, 42)
+
+
+def test_regex():
+    field = fields.RegexField(r'[abc]+')
+
+    field.set_value('aabbccccbbaa')
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value('foo bar')
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_email():
+    field = fields.EmailField()
+
+    field.set_value('carlosmaniero@gmail.com')
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value('carlosmaniero@gmail')
+    field.clean()
+    assert not field.is_valid()

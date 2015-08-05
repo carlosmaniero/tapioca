@@ -1,3 +1,6 @@
+import re
+
+
 class ValidationException(Exception):
     def __init__(self, message, *args, **kwargs):
         self.message = message
@@ -144,3 +147,24 @@ class FloatField(IntegerField):
                 return self.value
 
         return super(IntegerField, self).clean()
+
+
+class RegexField(CharField):
+    def __init__(self, regex, *args, **kwargs):
+        super(RegexField, self).__init__(*args, **kwargs)
+        self.regex = regex
+
+    def clean_regex(self):
+        if self.value is not None:
+            if re.match(self.regex, self.value) is None:
+                raise ValidationException(
+                    self.messages.get('regex', 'Regex error')
+                )
+        return self.value
+
+
+class EmailField(RegexField):
+    REGEX = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+
+    def __init__(self, *args, **kwargs):
+        super(EmailField, self).__init__(self.REGEX, *args, **kwargs)
