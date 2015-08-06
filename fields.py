@@ -149,6 +149,30 @@ class FloatField(IntegerField):
         return super(IntegerField, self).clean()
 
 
+class BooleanField(Field):
+    def __init__(self, *args, **kwargs):
+        if 'required' in kwargs:
+            kwargs.pop('required')
+        super(BooleanField, self).__init__(required=True, *args, **kwargs)
+        self.value = False
+
+    def set_value(self, value):
+        self.value = bool(value)
+
+
+class ChoiceField(Field):
+    def __init__(self, choices, *args, **kwargs):
+        self.choices = choices
+        super(ChoiceField, self).__init__(*args, **kwargs)
+
+    def clean_choice(self):
+        if self.value is not None:
+            if self.value not in self.choices:
+                raise ValidationException(
+                    self.messages.get('choice', '{} isn\'t a valid option.')
+                )
+
+
 class RegexField(CharField):
     def __init__(self, regex, *args, **kwargs):
         super(RegexField, self).__init__(*args, **kwargs)
@@ -168,3 +192,29 @@ class EmailField(RegexField):
 
     def __init__(self, *args, **kwargs):
         super(EmailField, self).__init__(self.REGEX, *args, **kwargs)
+
+
+class UrlField(RegexField):
+    # Django Fork
+    # unicode letters range (must be a unicode string, not a raw string)
+    ul = '\u00a1-\uffff'
+
+    # IP patterns
+    ipv4_re = r'(?:25[0-5]|2[0-4]\d|[0-1]?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}'
+    ipv6_re = r'\[[0-9a-f:\.]+\]'  # (simple regex, validated later)
+
+    # Host patterns
+    hostname_re = r'[a-z' + ul + r'0-9](?:[a-z' + ul + r'0-9-]*[a-z' + ul + r'0-9])?'
+    domain_re = r'(?:\.(?!-)[a-z' + ul + r'0-9-]*(?<!-))*'
+    tld_re = r'\.(?:[a-z' + ul + r']{2,}|xn--[a-z0-9]+)\.?'
+    host_re = '(' + hostname_re + domain_re + tld_re + '|localhost)'
+
+    REGEX = (r'^(?:[a-z0-9\.\-]*)://'  # scheme is validated separately
+             r'(?:\S+(?::\S*)?@)?'  # user:pass authentication
+             r'(?:' + ipv4_re + '|' + ipv6_re + '|' + host_re + ')'
+             r'(?::\d{2,5})?'  # port
+             r'(?:[/?#][^\s]*)?'  # resource path
+             r'\Z')
+
+    def __init__(self, *args, **kwargs):
+        super(UrlField, self).__init__(self.REGEX, *args, **kwargs)

@@ -2,69 +2,69 @@ import fields
 
 
 def test_blank_field():
-    simple_field = fields.Field()
-    simple_field.clean()
-    assert simple_field.is_valid()
+    field = fields.Field()
+    field.clean()
+    assert field.is_valid()
 
 
 def test_required_field():
-    simple_field = fields.Field(required=True)
-    simple_field.clean()
-    assert not simple_field.is_valid()
+    field = fields.Field(required=True)
+    field.clean()
+    assert not field.is_valid()
 
-    simple_field.set_value('foo bar')
-    simple_field.clean()
-    assert simple_field.is_valid()
-
-
-def test_charfield():
-    charfield = fields.CharField(blank=True)
-    charfield.clean()
-    assert charfield.is_valid()
-
-    charfield = fields.CharField(blank=False)
-    charfield.set_value('')
-    charfield.clean()
-    assert not charfield.is_valid()
+    field.set_value('foo bar')
+    field.clean()
+    assert field.is_valid()
 
 
-def test_charfield_limits():
-    charfield = fields.CharField(min_length=3, max_length=6)
-    charfield.set_value('abc')
-    charfield.clean()
-    assert charfield.is_valid()
+def test_char():
+    field = fields.CharField(blank=True)
+    field.clean()
+    assert field.is_valid()
 
-    charfield.set_value('abcdef')
-    charfield.clean()
-    assert charfield.is_valid()
-
-    charfield.set_value('ab')
-    charfield.clean()
-    assert not charfield.is_valid()
-
-    charfield.set_value('abcdefg')
-    charfield.clean()
-    assert not charfield.is_valid()
+    field = fields.CharField(blank=False)
+    field.set_value('')
+    field.clean()
+    assert not field.is_valid()
 
 
-def test_integerfield():
-    integerfield = fields.IntegerField()
-    integerfield.clean()
-    assert integerfield.is_valid()
+def test_char_limits():
+    field = fields.CharField(min_length=3, max_length=6)
+    field.set_value('abc')
+    field.clean()
+    assert field.is_valid()
 
-    integerfield.set_value(4.2)
-    value = integerfield.clean()
-    assert integerfield.is_valid()
+    field.set_value('abcdef')
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value('ab')
+    field.clean()
+    assert not field.is_valid()
+
+    field.set_value('abcdefg')
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_int():
+    field = fields.IntegerField()
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value(4.2)
+    value = field.clean()
+    assert field.is_valid()
     assert value == 4
 
-    integerfield.set_value('3.14')
-    value = integerfield.clean()
-    assert integerfield.is_valid()
+    field.set_value('3.14')
+    value = field.clean()
+    assert field.is_valid()
     assert value == 3
 
-    integerfield.set_value('aimpim')
-    value = integerfield.clean()
-    assert not integerfield.is_valid()
+    field.set_value('aimpim')
+    value = field.clean()
+    assert not field.is_valid()
 
 
 def num_limits(fieldclass, min, max):
@@ -87,31 +87,69 @@ def num_limits(fieldclass, min, max):
     assert not field.is_valid()
 
 
-def test_integer_limits():
+def test_int_limits():
     num_limits(fields.IntegerField, 3, 6)
 
 
-def test_floatfield():
-    floatfield = fields.FloatField()
-    floatfield.clean()
-    assert floatfield.is_valid()
+def test_float():
+    field = fields.FloatField()
+    field.clean()
+    assert field.is_valid()
 
-    floatfield.set_value(4.2)
-    value = floatfield.clean()
-    assert floatfield.is_valid()
+    field.set_value(4.2)
+    value = field.clean()
+    assert field.is_valid()
 
-    floatfield.set_value('3.14')
-    value = floatfield.clean()
-    assert floatfield.is_valid()
+    field.set_value('3.14')
+    value = field.clean()
+    assert field.is_valid()
     assert value == 3.14
 
-    floatfield.set_value('aimpim')
-    value = floatfield.clean()
-    assert not floatfield.is_valid()
+    field.set_value('aimpim')
+    value = field.clean()
+    assert not field.is_valid()
 
 
-def test_floatfield_limits():
+def test_float_limits():
     num_limits(fields.FloatField, 3.14, 42)
+
+
+def test_boolean():
+    field = fields.BooleanField()
+
+    field.set_value(False)
+    value = field.clean()
+    assert field.is_valid()
+    assert not value
+
+    field.set_value(True)
+    value = field.clean()
+    assert field.is_valid()
+    assert value
+
+    field.set_value(None)
+    value = field.clean()
+    assert field.is_valid()
+    assert not value
+
+    field.set_value("This is love")
+    value = field.clean()
+    assert field.is_valid()
+    assert value
+
+
+def test_choice():
+    field = fields.ChoiceField(
+        ('banana', 'tofu')
+    )
+
+    field.set_value('meat')     # :,(
+    field.clean()
+    assert not field.is_valid()
+
+    field.set_value('banana')
+    field.clean()
+    assert field.is_valid()
 
 
 def test_regex():
@@ -134,5 +172,21 @@ def test_email():
     assert field.is_valid()
 
     field.set_value('carlosmaniero@gmail')
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_http():
+    field = fields.UrlField()
+
+    field.set_value('https://www.python.org/')
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value('https://tapioca.vegan')
+    field.clean()
+    assert field.is_valid()
+
+    field.set_value('http://bacon')
     field.clean()
     assert not field.is_valid()
