@@ -1,4 +1,6 @@
 import fields
+from fields.utils import make_field
+from datetime import datetime
 
 
 def test_blank_field():
@@ -140,7 +142,8 @@ def test_boolean():
 
 def test_choice():
     field = fields.ChoiceField(
-        ('banana', 'tofu')
+        ('banana', 'tofu'),
+        required=True
     )
 
     field.set_value('meat')     # :,(
@@ -150,6 +153,34 @@ def test_choice():
     field.set_value('banana')
     field.clean()
     assert field.is_valid()
+
+
+def test_datetime():
+    field = fields.DateTimeField()
+
+    field.set_value('1993-09-25 05:30:00')
+    date = datetime(1993, 9, 25, 5, 30, 00)
+    date_field = field.clean()
+    assert field.is_valid()
+    assert date == date_field
+
+    field.set_value('1993-09-25 05:30')
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_date():
+    field = fields.DateField()
+
+    field.set_value('1993-09-25')
+    date = datetime(1993, 9, 25)
+    date_field = field.clean()
+    assert field.is_valid()
+    assert date == date_field
+
+    field.set_value('1993-09-32')
+    field.clean()
+    assert not field.is_valid()
 
 
 def test_regex():
@@ -188,5 +219,30 @@ def test_http():
     assert field.is_valid()
 
     field.set_value('http://bacon')
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_array():
+    field = fields.ListField('int', {'required': True})
+    field.set_value([1, 2, 3, 4, 5])
+    field.clean()
+    assert field.is_valid()
+
+    field = fields.ListField('email', {'required': True})
+    field.set_value(['tapioca@pot.com', 'foobar'])
+    field.clean()
+    assert not field.is_valid()
+
+
+def test_register():
+    assert fields.fields.get_field('email') == fields.EmailField
+    assert fields.fields.get_field('int') == fields.IntegerField
+    assert fields.fields.get_field('float') == fields.FloatField
+
+
+def test_make_field():
+    field = make_field(required=True, blank=False, type='char')
+    field.set_value('')
     field.clean()
     assert not field.is_valid()
