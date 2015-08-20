@@ -28,8 +28,11 @@ class Field(object):
         self.error = None
         self.messages = messages
 
-    def set_value(self, value):
+    def set(self, value):
         self.value = value
+
+    def get(self):
+        return self.value
 
     def get_clean_methods(self):
         methods = []
@@ -180,7 +183,7 @@ class BooleanField(Field):
         super(BooleanField, self).__init__(required=True, *args, **kwargs)
         self.value = False
 
-    def set_value(self, value):
+    def set(self, value):
         self.value = bool(value)
 
 
@@ -280,7 +283,7 @@ class UrlField(RegexField):
 
 class ListField(Field):
     type = 'list'
-    value = []
+    __value = []
     fields = []
     array_errors = []
 
@@ -289,21 +292,32 @@ class ListField(Field):
         self.kwargs = field_kwargs
         super(ListField, self).__init__(*args, **kwargs)
 
-    def set_value(self, data):
+    def set(self, data):
         self.value = data
         self.fields = []
 
+        if data is None:
+            return
+
         for value in data:
             field = self.field_class(**self.kwargs)
-            field.set_value(value)
+            field.set(value)
             self.fields.append(field)
+
+    def get(self):
+        return self.value
 
     def clean_fields(self):
         self.array_errors = []
+
         i = 0
         for field in self.fields:
             self.value[i] = field.clean()
+            print(self.error)
+            print(1111)
             i += 1
+
+        return self.value
 
     def clean(self):
         value = super(ListField, self).clean()

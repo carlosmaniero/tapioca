@@ -99,8 +99,8 @@ def test_update():
     tapioca.candy = False
 
     yield tapioca.save()
-
     assert tapioca._id == data['_id']
+    assert len(tapioca.last_updates) > 0
 
     tapiocas2 = yield tapioca.queryset.find().to_list(length=1)
     assert data['_id'] == tapiocas2[0]['_id']

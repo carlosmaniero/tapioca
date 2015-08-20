@@ -29,21 +29,21 @@ class ModelDataMixin(object):
         if hasattr(self, item):
             data = object.__getattribute__(self, item)
             if isinstance(data, fields.Field):
-                data.set_value(value)
+                data.set(value)
                 return
         return super(ModelDataMixin, self).__setattr__(item, value)
 
     def __getattribute__(self, item):
         ret = super(ModelValidationMixin, self).__getattribute__(item)
         if isinstance(ret, fields.Field):
-            return ret.clean()
+            return ret.get()
         return ret
 
 
 class ModelValidationMixin(object):
     def __init__(self, fields):
-        self._fields = self.get_default_fields()
-        self._fields.update(fields)
+        self._fields = fields
+        self._fields.update(self.get_default_fields())
         self.make_fields()
 
     def make_fields(self):
@@ -89,6 +89,7 @@ class Model(ModelBase):
     def get_default_fields(self):
         return {
             'created_at': {'type': 'datetime'},
+            'last_updates': {'type': 'list', 'field': 'datetime'}
         }
 
     def get_collection(self):
@@ -105,6 +106,10 @@ class Model(ModelBase):
         collection = self.get_collection()
 
         if self._id:
+            if self.last_updates is None:
+                self.last_updates = []
+
+            self.last_updates.append(datetime.now())
             future = collection.update({'_id': self._id}, self.__dict__)
             result = yield future
         else:
